@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rescue Baton</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Public+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f0ff;--panel:#fff;--ink:#1d1a45;--mute:#6a6690;--line:#dcd7f5;--saf:#e08a00;--cor:#d94452;--mint:#0c9b78;--glow:rgba(224,138,0,.18);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12102b;--panel:#1c1a40;--ink:#f3efff;--mute:#9d98c9;--line:#322f66;--saf:#ffb938;--cor:#ff6b7a;--mint:#5be3c0;--glow:rgba(255,185,56,.16)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Public Sans",system-ui,sans-serif}
+h1,h2,.big{font-family:"Bricolage Grotesque",system-ui,sans-serif}
+.hero{max-width:1180px;margin:auto;padding:28px 20px 10px;display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between}
+h1{margin:0;font-size:clamp(34px,7vw,72px);line-height:.95;font-weight:800;letter-spacing:-.03em}
+.hero p{margin:10px 0 0;max-width:52ch;color:var(--mute)}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 16px;min-width:92px}
+.stat b{display:block;font:800 30px/1 "Bricolage Grotesque",sans-serif}
+.stat span{font-size:12px;color:var(--mute)}
+main{max-width:1180px;margin:auto;padding:10px 20px 50px;display:grid;gap:16px;grid-template-columns:300px 1fr}
+@media(max-width:860px){main{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}
+h2{font-size:20px;margin:0 0 8px;font-weight:700}
+label{display:block;font-weight:600;margin:12px 0 4px;font-size:14px}
+select,input{width:100%;font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+button{font:inherit;font-weight:600;border:0;border-radius:999px;padding:10px 16px;cursor:pointer;background:var(--saf);color:#1d1a45;width:100%;margin-top:12px}
+button.alt{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+button.sm{width:auto;margin:0;padding:5px 14px;font-size:13px}
+button:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:3px solid var(--saf);outline-offset:2px}
+.stage{display:grid;gap:16px}
+.mapwrap{padding:8px;background:radial-gradient(circle at 30% 30%,var(--glow),transparent 60%),var(--panel)}
+svg{width:100%;height:auto;display:block}
+.two{display:grid;gap:16px;grid-template-columns:1.2fr 1fr}
+@media(max-width:860px){.two{grid-template-columns:1fr}}
+.card{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;padding:12px 0;border-bottom:1px dashed var(--line)}
+.card:last-child{border:0}
+.name{font-weight:600}.mute{color:var(--mute);font-size:13px}
+.meter{grid-column:1/-1;height:7px;border-radius:4px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--saf),var(--cor))}
+.tag{font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
+.hot{background:var(--cor);color:#fff;border-color:var(--cor)}
+.ok{background:var(--mint);color:#0b1a16;border-color:var(--mint)}
+.wait{color:var(--saf);border-color:var(--saf)}
+.log{font:12px/1.6 ui-monospace,Menlo,monospace;color:var(--mute);max-height:300px;overflow:auto;word-break:break-all}
+.log div{padding:6px 0 6px 12px;border-left:3px solid var(--saf);margin-bottom:6px}
+.note{font-size:12px;color:var(--mute);margin-top:12px}
+.ripple{transform-box:fill-box;transform-origin:center;animation:rip 3.6s ease-out infinite}
+@keyframes rip{from{transform:scale(.05);opacity:.9}to{transform:scale(1);opacity:0}}
+@media(prefers-reduced-motion:reduce){.ripple{animation:none;opacity:.35}}
+</style>
+</head>
+<body>
+<div class="hero">
+<div>
+<h1>Rescue<br>Baton</h1>
+<p>A missing child doesn’t stop at a district line, so the case shouldn’t either. See where the child can go next, warn those districts first, and pass the case on a baton that must be accepted in time.</p>
+</div>
+<div class="stats" aria-live="polite">
+<div class="stat"><b id="s1">0</b><span>districts warned</span></div>
+<div class="stat"><b id="s2">0</b><span>baton passes</span></div>
+<div class="stat"><b id="s3">0</b><span>escalations</span></div>
+</div>
+</div>
+<main>
+<section class="panel" aria-label="Case controls">
+<h2>Open a case</h2>
+<label for="orig">Last seen in</label><select id="orig"></select>
+<label for="mode">Likely transport</label>
+<select id="mode"><option value="4">On foot, 4 km/h</option><option value="35" selected>Bus, 35 km/h</option><option value="55">Train, 55 km/h</option><option value="50">Private vehicle, 50 km/h</option></select>
+<label for="hrs">Hours since last seen</label><input id="hrs" type="number" min="0.5" max="24" step="0.5" value="3">
+<button id="go">Raise alert</button>
+<button id="demo" class="alt">Watch a sample case</button>
+<h2 style="margin-top:24px">Add a sighting</h2>
+<label for="sight">Seen near</label><select id="sight"></select>
+<button id="sbtn" class="alt" disabled>Add sighting</button>
+<p class="note">Simulated data for demonstration. A live system would hide names and photos from the public and show them only to authorised officers.</p>
+</section>
+<div class="stage">
+<section class="panel mapwrap" aria-label="Reach map">
+<svg id="map" viewBox="0 0 600 420" role="img" aria-label="Map showing the predicted spread from the last-seen district">
+<g id="grid"></g><g id="links"></g><g id="reach"></g><g id="nodes"></g><g id="fly"></g>
+</svg>
+</section>
+<div class="two">
+<section class="panel" aria-label="Pre-alert queue">
+<h2>Warn these districts first</h2>
+<div id="alerts"><p class="mute">Open a case to see which districts are most at risk and how long they have.</p></div>
+</section>
+<section class="panel" aria-label="Baton chain">
+<h2>Baton chain</h2>
+<p class="mute" id="holder">No active case.</p>
+<div class="log" id="log" aria-live="polite"></div>
+</section>
+</div>
+</div>
+</main>
+<script>
+const D=[["Nashik",20.0,73.78,1],["Pune",18.52,73.86,1],["Mumbai",19.08,72.88,1],["Thane",19.22,72.98,0],["Palghar",19.7,72.77,0],["Ahmednagar",19.09,74.74,0],["Dhule",20.9,74.77,0],["Jalgaon",21.0,75.56,1],["Aurangabad",19.88,75.34,1],["Nandurbar",21.37,74.24,0],["Satara",17.68,74.0,0],["Solapur",17.66,75.9,1],["Surat",21.17,72.83,1],["Indore",22.72,75.86,1]].map((d,i)=>({i,n:d[0],lat:d[1],lon:d[2],hub:d[3]}));
+const $=id=>document.getElementById(id), NS="http://www.w3.org/2000/svg";
+const km=(a,b)=>{const r=Math.PI/180,x=(b.lon-a.lon)*r*Math.cos((a.lat+b.lat)/2*r),y=(b.lat-a.lat)*r;return Math.hypot(x,y)*6371*1.3};
+const X=d=>35+(d.lon-72.4)/3.8*530, Y=d=>390-(d.lat-17.4)/5.5*360;
+const PX=530/(3.8*111*Math.cos(20*Math.PI/180))/1.3;
+D.forEach(d=>["orig","sight"].forEach(s=>{const o=document.createElement("option");o.value=d.i;o.textContent=d.n;$(s).appendChild(o)}));
+$("orig").value=0;$("sight").value=7;
+// static map furniture
+let g="";for(let i=0;i<=6;i++){g+=`<line x1="${35+i*88}" y1="20" x2="${35+i*88}" y2="400" stroke="var(--line)" stroke-width=".6"/>`;}
+for(let i=0;i<=5;i++)g+=`<line x1="20" y1="${30+i*72}" x2="580" y2="${30+i*72}" stroke="var(--line)" stroke-width=".6"/>`;
+$("grid").innerHTML=g;
+let l="";D.forEach(a=>D.forEach(b=>{if(a.i<b.i&&km(a,b)<190)l+=`<line x1="${X(a)}" y1="${Y(a)}" x2="${X(b)}" y2="${Y(b)}" stroke="var(--mute)" stroke-opacity=".3" stroke-dasharray="2 5"/>`}));
+$("links").innerHTML=l;
+
+let C=null,stats={w:0,p:0,e:0};
+const sh=()=>{$("s1").textContent=C?C.rows.length:0;$("s2").textContent=stats.p;$("s3").textContent=stats.e};
+const hash=s=>{let a=0xdeadbeef,b=0x41c6ce57;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);a=Math.imul(a^c,2654435761);b=Math.imul(b^c,1597334677)}a=Math.imul(a^a>>>16,2246822507)^Math.imul(b^b>>>13,3266489909);b=Math.imul(b^b>>>16,2246822507)^Math.imul(a^a>>>13,3266489909);return(4294967296*(2097151&b)+(a>>>0)).toString(16).padStart(14,"0").slice(0,10)};
+function log(m){const p=C.chain.length?C.chain[C.chain.length-1].h:"genesis";const t=new Date().toLocaleTimeString();const h=hash(p+m+t);C.chain.push({m,t,h});$("log").innerHTML=C.chain.slice().reverse().map(e=>`<div>${e.t}<br>${e.m}<br><span style="opacity:.6">link ${e.h} after ${hash(e.h).slice(0,4)}</span></div>`).join("")}
+function predict(){
+ const o=D[C.orig],reach=C.speed*C.hrs;
+ C.rows=D.filter(d=>d.i!==C.orig).map(d=>{const dist=km(o,d);let w=0;
+  if(dist<=reach*1.1)w=Math.exp(-dist/(reach*.6+20))*(d.hub?1.5:1);
+  C.sights.forEach(s=>{const sd=km(D[s],d);if(sd<60)w=Math.max(w,.15)+(s===d.i?3:1.2)*Math.exp(-sd/40)});
+  return{d,dist,w,eta:dist/C.speed-C.hrs}}).filter(r=>r.w>0);
+ const T=C.rows.reduce((a,b)=>a+b.w,0)||1;C.rows.forEach(r=>r.p=r.w/T);
+ C.rows.sort((a,b)=>a.eta-b.eta||b.p-a.p);
+}
+function drawReach(){
+ const o=D[C.orig],R=Math.min(C.speed*C.hrs*PX,420);let s=`<circle cx="${X(o)}" cy="${Y(o)}" r="${R}" fill="var(--saf)" fill-opacity=".1" stroke="var(--saf)" stroke-dasharray="6 5"/>`;
+ [0,1.2,2.4].forEach(d=>s+=`<circle class="ripple" style="animation-delay:${d}s" cx="${X(o)}" cy="${Y(o)}" r="${R}" fill="none" stroke="var(--saf)" stroke-width="2"/>`);
+ $("reach").innerHTML=s;
+}
+function nodes(){
+ const o=D[C.orig];let s="";
+ D.forEach(d=>{const r=C.rows.find(r=>r.d===d),st=C.state[d.i];
+  const col=d.i===C.holder?"var(--mint)":d===o?"var(--cor)":r?"var(--saf)":"var(--mute)";
+  const rad=d===o||d.i===C.holder?10:r?6+r.p*34:4;
+  if(st&&st.s==="wait"){const circ=2*Math.PI*(rad+8);s+=`<circle cx="${X(d)}" cy="${Y(d)}" r="${rad+8}" fill="none" stroke="var(--saf)" stroke-width="3" stroke-dasharray="${circ}" stroke-dashoffset="${circ*(1-st.left/C.sla)}" transform="rotate(-90 ${X(d)} ${Y(d)})"/>`}
+  if(st&&st.s==="esc")s+=`<circle cx="${X(d)}" cy="${Y(d)}" r="${rad+8}" fill="none" stroke="var(--cor)" stroke-width="3"/>`;
+  s+=`<circle cx="${X(d)}" cy="${Y(d)}" r="${rad}" fill="${col}" fill-opacity="${r||d===o||d.i===C.holder?.92:.45}"/><text x="${X(d)+rad+5}" y="${Y(d)+4}" font-size="11" font-weight="600" fill="var(--ink)">${d.n}</text>`});
+ C.sights.forEach(i=>s+=`<path d="M${X(D[i])-7} ${Y(D[i])-7}l14 14m0-14l-14 14" stroke="var(--mint)" stroke-width="3.5" stroke-linecap="round"/>`);
+ $("nodes").innerHTML=s;
+}
+function lists(){
+ $("holder").innerHTML=`Baton held by <b>${D[C.holder].n}</b>. A district has ${C.sla} s to accept, which stands for 15 minutes in real life.`;
+ $("alerts").innerHTML=C.rows.map(r=>{const st=C.state[r.d.i],pct=Math.min(100,Math.round(r.p*200));
+  const eta=r.eta<=0?`<span class="tag hot">May already be there</span>`:`<span class="tag wait">${r.eta.toFixed(1)} h to intercept</span>`;
+  const act=!st?`<button class="sm" data-p="${r.d.i}">Pass baton</button>`:st.s==="wait"?`<span class="tag wait">Accept in ${st.left}s</span>`:st.s==="ok"?`<span class="tag ok">Accepted</span>`:`<span class="tag hot">Sent to state control room</span>`;
+  return`<div class="card"><div><span class="name">${r.d.n}</span> <span class="mute">${Math.round(r.dist)} km, ${(r.p*100).toFixed(0)}% of predicted spread</span></div><div>${eta}</div><div class="meter"><i style="width:${pct}%"></i></div><div style="grid-column:1/-1;text-align:right">${act}</div></div>`}).join("")||"<p class='mute'>No districts in range yet.</p>";
+}
+const paint=()=>{nodes();lists();sh()};
+function fly(a,b,cb){
+ const c=document.createElementNS(NS,"circle");c.setAttribute("r",7);c.setAttribute("fill","var(--saf)");c.setAttribute("stroke","var(--ink)");c.setAttribute("stroke-width",2);$("fly").appendChild(c);
+ const t0=performance.now(),dur=matchMedia("(prefers-reduced-motion:reduce)").matches?1:1100;
+ (function f(t){const k=Math.min(1,(t-t0)/dur),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;c.setAttribute("cx",X(a)+(X(b)-X(a))*e);c.setAttribute("cy",Y(a)+(Y(b)-Y(a))*e-Math.sin(k*Math.PI)*22);
+  if(k<1)requestAnimationFrame(f);else{c.remove();cb()}})(t0);
+}
+function pass(i,force){
+ if(C.state[i])return;const from=D[C.holder];C.state[i]={s:"wait",left:C.sla};stats.p++;
+ log(`Baton passed ${from.n} to ${D[i].n}. Acceptance timer started`);paint();
+ fly(from,D[i],()=>{});
+ const will=force?force==="ok":Math.random()<.7,at=(3+Math.random()*5)*1000,t0=Date.now();
+ const tm=setInterval(()=>{const st=C.state[i];if(!st||st.s!=="wait"){clearInterval(tm);return}
+  const el=(Date.now()-t0)/1000;st.left=Math.max(0,C.sla-Math.floor(el));
+  if(will&&el*1000>=at){clearInterval(tm);const prev=C.holder;st.s="ok";C.holder=i;log(`${D[i].n} accepted the baton and now owns the case`);predict();paint();return}
+  if(st.left<=0){clearInterval(tm);st.s="esc";stats.e++;log(`${D[i].n} did not accept in time. Escalated to the state control room and neighbouring districts`);paint();return}
+  paint()},1000);
+}
+function open(o,sp,h){
+ C={orig:o,speed:sp,hrs:h,sights:[],state:{},chain:[],sla:15,holder:o};$("fly").innerHTML="";stats={w:0,p:0,e:0};
+ log(`Case opened in ${D[o].n}. ${h} h since last seen`);predict();log(`Prediction covers ${C.rows.length} districts. Pre-alerts ready`);drawReach();paint();$("sbtn").disabled=false;
+}
+$("go").onclick=()=>open(+$("orig").value,+$("mode").value,+$("hrs").value||3);
+$("sbtn").onclick=()=>{if(!C)return;const i=+$("sight").value;C.sights.push(i);log(`Citizen sighting reported near ${D[i].n}. Probabilities recalculated`);predict();drawReach();paint()};
+$("demo").onclick=()=>{$("orig").value=0;$("mode").value=35;$("hrs").value=3;open(0,35,3);
+ const a=C.rows[0].d.i,b=C.rows[1]?C.rows[1].d.i:a;
+ setTimeout(()=>pass(a,"ok"),1200);setTimeout(()=>{if(b!==a)pass(b,"fail")},2600)};
+$("alerts").addEventListener("click",e=>{const p=e.target.dataset.p;if(p!==undefined)pass(+p)});
+$("alerts").addEventListener("keydown",()=>{});
+</script>
+</body>
+</html>
